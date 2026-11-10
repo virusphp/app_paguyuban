@@ -1,0 +1,29 @@
+/* Token desain Paguyuban — dashboard PC. Jangan pakai nilai mentah di komponen. */
+:root{
+  --pg-font:'Plus Jakarta Sans',system-ui,sans-serif;
+
+  --pg-primary:#0F766E;
+  --pg-primary-hover:#0B5F59;
+  --pg-primary-ink:#FFFFFF;
+  --pg-sidebar:#0B4F4A;
+  --pg-sidebar-sa:#10231F;
+  --pg-sidebar-text:#E6F4F1;
+  --pg-sidebar-sub:#BFE3DD;
+
+  --pg-bg:#F3F6F5;
+  --pg-surface:#FFFFFF;
+  --pg-border:#DDE5E2;
+  --pg-border-soft:#EEF2F0;
+  --pg-input-border:#7C918A;
+  --pg-track:#E4ECE9;
+  --pg-text:#14211F;
+  --pg-muted:#55645F;
+
+  --pg-ok-bg:#DCFAE6;   --pg-ok-fg:#05603A;
+  --pg-warn-bg:#FEF0C7; --pg-warn-fg:#7A2E0E;
+  --pg-bad-bg:#FEE4E2;  --pg-bad-fg:#912018;
+
+  --pg-r-card:16px; --pg-r-btn:12px; --pg-r-ctl:10px; --pg-r-pill:999px;
+  --pg-s1:4px; --pg-s2:8px; --pg-s3:12px; --pg-s4:16px; --pg-s5:20px; --pg-s6:24px; --pg-s7:32px;
+  --pg-sidebar-w:232px;
+}

@@ -1,0 +1,74 @@
+/* Komponen baku dashboard PC. Hanya memakai token dari tokens.css. */
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--pg-font);font-size:14px;color:var(--pg-text);background:var(--pg-bg)}
+h1,h2{margin:0}
+a{color:var(--pg-primary)}
+:focus-visible{outline:2px solid var(--pg-primary);outline-offset:2px}
+.pg-muted{color:var(--pg-muted);font-size:13px}
+
+/* Layout */
+.pg-app{display:grid;grid-template-columns:var(--pg-sidebar-w) 1fr;min-height:100vh}
+.pg-main{padding:28px var(--pg-s7);display:flex;flex-direction:column;gap:var(--pg-s5);min-width:0}
+.pg-grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:var(--pg-s4)}
+.pg-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--pg-s4)}
+.pg-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--pg-s4)}
+.pg-stack{display:flex;flex-direction:column;gap:var(--pg-s4)}
+
+/* Sidebar */
+.pg-sidebar{background:var(--pg-sidebar);padding:var(--pg-s6) var(--pg-s4);display:flex;flex-direction:column;gap:var(--pg-s1)}
+.pg-sidebar--sa{background:var(--pg-sidebar-sa)}
+.pg-sidebar__brand{color:#fff;font-size:17px;font-weight:700;padding:0 var(--pg-s3)}
+.pg-sidebar__sub{color:var(--pg-sidebar-sub);font-size:12px;padding:0 var(--pg-s3) var(--pg-s5)}
+.pg-sidebar a{display:block;padding:11px var(--pg-s3);border-radius:var(--pg-r-ctl);color:var(--pg-sidebar-text);text-decoration:none;font-size:14px}
+.pg-sidebar a:hover{background:rgba(255,255,255,.08)}
+.pg-sidebar a.is-active{background:var(--pg-primary);color:var(--pg-primary-ink);font-weight:700}
+.pg-sidebar a:focus-visible{outline-color:#fff}
+
+/* Kepala halaman */
+.pg-page-head{display:flex;justify-content:space-between;align-items:center;gap:var(--pg-s4)}
+.pg-page-head h1{font-size:26px;font-weight:700}
+
+/* Kartu */
+.pg-card{background:var(--pg-surface);border:1px solid var(--pg-border);border-radius:var(--pg-r-card);padding:var(--pg-s4)}
+.pg-card__title{font-size:15px;font-weight:700;margin:0 0 10px}
+.pg-stat__value{font-size:26px;font-weight:700;margin:4px 0}
+
+/* Chip status (selalu dengan teks) */
+.pg-chip{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:var(--pg-r-pill);white-space:nowrap}
+.pg-chip--ok{background:var(--pg-ok-bg);color:var(--pg-ok-fg)}
+.pg-chip--warn{background:var(--pg-warn-bg);color:var(--pg-warn-fg)}
+.pg-chip--bad{background:var(--pg-bad-bg);color:var(--pg-bad-fg)}
+
+/* Tombol */
+.pg-btn{border:0;border-radius:var(--pg-r-btn);background:var(--pg-primary);color:var(--pg-primary-ink);font-family:inherit;font-size:15px;font-weight:600;min-height:44px;padding:0 var(--pg-s4);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.pg-btn:hover{background:var(--pg-primary-hover)}
+.pg-btn--outline{background:var(--pg-surface);color:var(--pg-primary);border:1px solid var(--pg-primary);font-size:13px;min-height:36px;border-radius:var(--pg-r-ctl)}
+.pg-btn--outline:hover{background:var(--pg-ok-bg)}
+
+/* Tabel */
+.pg-table-wrap{overflow-x:auto}
+.pg-table{width:100%;border-collapse:collapse}
+.pg-table th{font-size:12px;font-weight:600;color:var(--pg-muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--pg-border)}
+.pg-table td{padding:11px 6px;border-bottom:1px solid var(--pg-border-soft);min-height:44px}
+.pg-table .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* Form */
+.pg-field{margin-bottom:var(--pg-s3)}
+.pg-field label{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.pg-input{width:100%;height:42px;border:1px solid var(--pg-input-border);border-radius:var(--pg-r-ctl);padding:0 var(--pg-s3);font-family:inherit;font-size:14px;background:var(--pg-surface);color:var(--pg-text)}
+.pg-field__help{color:var(--pg-muted);font-size:13px;margin-top:4px}
+.pg-field__error{color:var(--pg-bad-fg);font-size:13px;margin-top:4px;font-weight:600}
+.pg-input[aria-invalid="true"]{border-color:var(--pg-bad-fg)}
+
+/* Progress */
+.pg-progress{height:10px;background:var(--pg-track);border-radius:var(--pg-r-pill);overflow:hidden}
+.pg-progress>span{display:block;height:100%;background:var(--pg-primary);border-radius:var(--pg-r-pill)}
+
+/* Keadaan kosong */
+.pg-empty{text-align:center;padding:var(--pg-s7) var(--pg-s4);color:var(--pg-muted)}
+.pg-empty p{margin:0 0 var(--pg-s3)}
+
+@media (max-width:1100px){
+  .pg-grid-4{grid-template-columns:repeat(2,1fr)}
+  .pg-grid-2{grid-template-columns:1fr}
+}

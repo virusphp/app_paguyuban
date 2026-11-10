@@ -1,0 +1,26 @@
+{# Dipakai lewat {% include "components/sidebar.html" %}.
+   Controller wajib menyediakan: area ("admin" atau "sa"), active (kunci menu aktif),
+   org_name (nama organisasi), dan daftar menu yang boleh dilihat peran saat ini. #}
+{% if area == "sa" %}
+<aside class="pg-sidebar pg-sidebar--sa" aria-label="Menu Superadmin">
+  <div class="pg-sidebar__brand">Superadmin</div>
+  <div class="pg-sidebar__sub">Manajemen sistem</div>
+  <a href="/sa/organisasi"{% if active == "ringkasan" %} class="is-active" aria-current="page"{% endif %}>Ringkasan</a>
+  <a href="/sa/organisasi"{% if active == "organisasi" %} class="is-active" aria-current="page"{% endif %}>Organisasi</a>
+  <a href="/sa/pengguna"{% if active == "pengguna" %} class="is-active" aria-current="page"{% endif %}>Pengguna</a>
+  <a href="/sa/log"{% if active == "log" %} class="is-active" aria-current="page"{% endif %}>Log Aktivitas</a>
+</aside>
+{% else %}
+<aside class="pg-sidebar" aria-label="Menu utama">
+  <div class="pg-sidebar__brand">{{ org_name }}</div>
+  <div class="pg-sidebar__sub">{{ role_label }}</div>
+  <a href="/dashboard"{% if active == "dashboard" %} class="is-active" aria-current="page"{% endif %}>Dashboard</a>
+  <a href="/anggota"{% if active == "anggota" %} class="is-active" aria-current="page"{% endif %}>Anggota</a>
+  <a href="/iuran"{% if active == "iuran" %} class="is-active" aria-current="page"{% endif %}>Iuran</a>
+  <a href="/kas"{% if active == "kas" %} class="is-active" aria-current="page"{% endif %}>Kas dan Laporan</a>
+  <a href="/kegiatan"{% if active == "kegiatan" %} class="is-active" aria-current="page"{% endif %}>Kegiatan</a>
+  <a href="/info"{% if active == "info" %} class="is-active" aria-current="page"{% endif %}>Info Penting</a>
+  <a href="/surat"{% if active == "surat" %} class="is-active" aria-current="page"{% endif %}>Surat dan Undangan</a>
+  <a href="/pengaturan"{% if active == "pengaturan" %} class="is-active" aria-current="page"{% endif %}>Pengaturan</a>
+</aside>
+{% endif %}

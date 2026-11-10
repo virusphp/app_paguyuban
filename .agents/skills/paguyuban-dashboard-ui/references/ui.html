@@ -1,0 +1,44 @@
+{# Makro Tera baku. Pakai: {% import "components/ui.html" as ui %} lalu {{ ui::chip(tone="ok", label="Lunas") }} #}
+{# Nilai dari pengguna di-escape otomatis oleh Tera. Jangan pakai |safe untuk input pengguna. #}
+
+{% macro page_head(title, subtitle="", action_label="", action_href="") %}
+<div class="pg-page-head">
+  <div>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<div class="pg-muted">{{ subtitle }}</div>{% endif %}
+  </div>
+  {% if action_label %}<a class="pg-btn" href="{{ action_href }}">{{ action_label }}</a>{% endif %}
+</div>
+{% endmacro page_head %}
+
+{% macro stat_card(label, value, hint="") %}
+<div class="pg-card pg-stat">
+  <div class="pg-muted">{{ label }}</div>
+  <div class="pg-stat__value">{{ value }}</div>
+  {% if hint %}<div class="pg-muted">{{ hint }}</div>{% endif %}
+</div>
+{% endmacro stat_card %}
+
+{# tone: ok | warn | bad (lihat pemetaan status di design-system.md) #}
+{% macro chip(tone, label) %}<span class="pg-chip pg-chip--{{ tone }}">{{ label }}</span>{% endmacro chip %}
+
+{% macro progress(percent, caption="") %}
+<div class="pg-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent }}"><span style="width:{{ percent }}%"></span></div>
+{% if caption %}<div class="pg-muted" style="margin-top:6px">{{ caption }}</div>{% endif %}
+{% endmacro progress %}
+
+{% macro field(label, name, value="", error="", help="", type="text", required=false) %}
+<div class="pg-field">
+  <label for="f-{{ name }}">{{ label }}{% if required %} (wajib){% endif %}</label>
+  <input class="pg-input" id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value }}"{% if required %} required{% endif %}{% if error %} aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  {% if help %}<div class="pg-field__help">{{ help }}</div>{% endif %}
+  {% if error %}<div class="pg-field__error" id="e-{{ name }}">{{ error }}</div>{% endif %}
+</div>
+{% endmacro field %}
+
+{% macro empty_state(message, action_label="", action_href="") %}
+<div class="pg-empty">
+  <p>{{ message }}</p>
+  {% if action_label %}<a class="pg-btn" href="{{ action_href }}">{{ action_label }}</a>{% endif %}
+</div>
+{% endmacro empty_state %}

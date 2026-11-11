@@ -80,14 +80,14 @@ impl SuperadminController {
 
         // Akumulasi Kas Global (Pemasukan - Pengeluaran)
         let total_income: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(SUM(amount_idr), 0) FROM transactions WHERE type = 'pemasukan'",
+            "SELECT COALESCE(SUM(amount_idr), 0) FROM transactions WHERE kind = 'masuk'",
         )
         .fetch_one(&pool)
         .await
         .unwrap_or(0);
 
         let total_expense: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(SUM(amount_idr), 0) FROM transactions WHERE type = 'pengeluaran'",
+            "SELECT COALESCE(SUM(amount_idr), 0) FROM transactions WHERE kind = 'keluar'",
         )
         .fetch_one(&pool)
         .await
@@ -125,7 +125,7 @@ impl SuperadminController {
 
         let top_orgs: Vec<TopOrg> = sqlx::query_as(
             r#"
-            SELECT o.id, o.name, o.type as org_type, o.status,
+            SELECT o.id, o.name, o.type::text as org_type, o.status::text as status,
                    COALESCE((SELECT COUNT(*) FROM members m WHERE m.org_id = o.id AND m.status = 'aktif'), 0) as members_count
             FROM organizations o
             ORDER BY o.created_at DESC
@@ -148,11 +148,11 @@ impl SuperadminController {
         let recent_logs_raw: Vec<(chrono::DateTime<Utc>, String, String, Option<String>)> =
             sqlx::query_as(
                 r#"
-            SELECT a.created_at, u.name as actor_name, a.action, o.name as org_name
+            SELECT a.at as created_at, u.name as actor_name, a.action, o.name as org_name
             FROM audit_logs a
             JOIN users u ON a.actor_user_id = u.id
             LEFT JOIN organizations o ON a.org_id = o.id
-            ORDER BY a.created_at DESC
+            ORDER BY a.at DESC
             LIMIT 5;
             "#,
             )
@@ -255,7 +255,7 @@ impl SuperadminController {
                 u.name as admin_name,
                 u.phone as admin_phone
             FROM organizations o
-            LEFT JOIN memberships m ON o.id = m.org_id AND m.role = 'admin'
+            LEFT JOIN memberships m ON o.id = m.org_id AND m.role::text = 'admin'
             LEFT JOIN users u ON m.user_id = u.id
             ORDER BY o.created_at DESC;
             "#,
@@ -425,7 +425,7 @@ impl SuperadminController {
         let _ = sqlx::query(
             r#"
             INSERT INTO audit_logs (org_id, actor_user_id, action, entity, entity_id, meta)
-            VALUES ($1, $2, 'CREATE_ORG', 'organizations', $1, $3);
+            VALUES ($1, $2, 'CREATE_ORG', 'organizations', $1::text, $3);
             "#,
         )
         .bind(Some(new_org_id))
@@ -535,7 +535,7 @@ impl SuperadminController {
             let _ = sqlx::query(
                 r#"
                 INSERT INTO audit_logs (org_id, actor_user_id, action, entity, entity_id, meta)
-                VALUES ($1, $2, 'IMPERSONATE_ORG', 'organizations', $1, $3);
+                VALUES ($1, $2, 'IMPERSONATE_ORG', 'organizations', $1::text, $3);
                 "#,
             )
             .bind(Some(id))

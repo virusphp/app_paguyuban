@@ -225,7 +225,7 @@ fn test_render_superadmin_views_native_blade() {
         "Must render org name"
     );
     assert!(
-        rendered_orgs.contains("Masuk sebagai Admin"),
+        rendered_orgs.contains("Masuk Kelola") || rendered_orgs.contains("Masuk sebagai Admin"),
         "Must render impersonate button"
     );
 

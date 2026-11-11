@@ -28,6 +28,176 @@ pub struct UpdateStatusForm {
 pub struct SuperadminController;
 
 impl SuperadminController {
+    /// Dashboard Ringkasan Global & Developer Telemetry (GET /sa & GET /sa/dashboard)
+    pub async fn dashboard(req: Request) -> Response {
+        let auth = match AuthContext::from_request(&req).await {
+            Ok(ctx) => ctx,
+            Err(res) => return res,
+        };
+
+        if let Err(res) = auth.require_superadmin() {
+            return res;
+        }
+
+        let db_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            "postgres://postgres:postgres@127.0.0.1:54322/db_paguyuban".to_string()
+        });
+
+        let pool = match sqlx::PgPool::connect(&db_url).await {
+            Ok(p) => p,
+            Err(e) => {
+                return Html(format!("<h1>Kesalahan Database: {}</h1>", e)).into_response();
+            }
+        };
+
+        // 1. Metrik Global
+        let total_orgs: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM organizations")
+            .fetch_one(&pool)
+            .await
+            .unwrap_or(0);
+
+        let active_orgs: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM organizations WHERE status = 'aktif'")
+                .fetch_one(&pool)
+                .await
+                .unwrap_or(0);
+
+        let total_members: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM members WHERE status = 'aktif'")
+                .fetch_one(&pool)
+                .await
+                .unwrap_or(0);
+
+        let total_households: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM households")
+            .fetch_one(&pool)
+            .await
+            .unwrap_or(0);
+
+        let total_users: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users")
+            .fetch_one(&pool)
+            .await
+            .unwrap_or(0);
+
+        // Akumulasi Kas Global (Pemasukan - Pengeluaran)
+        let total_income: i64 = sqlx::query_scalar(
+            "SELECT COALESCE(SUM(amount_idr), 0) FROM transactions WHERE type = 'pemasukan'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap_or(0);
+
+        let total_expense: i64 = sqlx::query_scalar(
+            "SELECT COALESCE(SUM(amount_idr), 0) FROM transactions WHERE type = 'pengeluaran'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap_or(0);
+
+        let global_cash_balance = total_income - total_expense;
+
+        // Akumulasi Tagihan & Kepatuhan Iuran
+        let total_invoices_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM invoices")
+            .fetch_one(&pool)
+            .await
+            .unwrap_or(0);
+
+        let paid_invoices_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM invoices WHERE status = 'lunas'")
+                .fetch_one(&pool)
+                .await
+                .unwrap_or(0);
+
+        let global_compliance_percent = if total_invoices_count > 0 {
+            (paid_invoices_count * 100) / total_invoices_count
+        } else {
+            100
+        };
+
+        // 2. Daftar Organisasi Teratas (maks 6)
+        #[derive(sqlx::FromRow, serde::Serialize)]
+        struct TopOrg {
+            id: Uuid,
+            name: String,
+            org_type: String,
+            status: String,
+            members_count: i64,
+        }
+
+        let top_orgs: Vec<TopOrg> = sqlx::query_as(
+            r#"
+            SELECT o.id, o.name, o.type as org_type, o.status,
+                   COALESCE((SELECT COUNT(*) FROM members m WHERE m.org_id = o.id AND m.status = 'aktif'), 0) as members_count
+            FROM organizations o
+            ORDER BY o.created_at DESC
+            LIMIT 6;
+            "#,
+        )
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+        // 3. 5 Log Audit Terakhir
+        #[derive(sqlx::FromRow, serde::Serialize)]
+        struct RecentLog {
+            created_at: String,
+            actor_name: String,
+            action: String,
+            org_name: Option<String>,
+        }
+
+        let recent_logs_raw: Vec<(chrono::DateTime<Utc>, String, String, Option<String>)> =
+            sqlx::query_as(
+                r#"
+            SELECT a.created_at, u.name as actor_name, a.action, o.name as org_name
+            FROM audit_logs a
+            JOIN users u ON a.actor_user_id = u.id
+            LEFT JOIN organizations o ON a.org_id = o.id
+            ORDER BY a.created_at DESC
+            LIMIT 5;
+            "#,
+            )
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default();
+
+        let wib_offset = FixedOffset::east_opt(7 * 3600).unwrap();
+        let recent_logs: Vec<RecentLog> = recent_logs_raw
+            .into_iter()
+            .map(|(created_at, actor_name, action, org_name)| RecentLog {
+                created_at: created_at
+                    .with_timezone(&wib_offset)
+                    .format("%d %b %H:%M")
+                    .to_string(),
+                actor_name,
+                action,
+                org_name,
+            })
+            .collect();
+
+        let mut ctx = BladeContext::new();
+        ctx.insert("title", "Portal Superadmin & Developer — Sistem Paguyuban");
+        ctx.insert("area", "sa");
+        ctx.insert("active", "dashboard");
+        ctx.insert("user_name", &auth.user_name);
+        ctx.insert("role_label", "SUPERADMIN");
+        ctx.insert("org_name", "Pusat Kontrol Superadmin");
+
+        ctx.insert("total_orgs", total_orgs);
+        ctx.insert("active_orgs", active_orgs);
+        ctx.insert("total_members", total_members);
+        ctx.insert("total_households", total_households);
+        ctx.insert("total_users", total_users);
+        ctx.insert("global_cash_balance", global_cash_balance);
+        ctx.insert("total_invoices_count", total_invoices_count);
+        ctx.insert("paid_invoices_count", paid_invoices_count);
+        ctx.insert("global_compliance_percent", global_compliance_percent);
+        ctx.insert("top_orgs", top_orgs);
+        ctx.insert("recent_logs", recent_logs);
+
+        let html = ViewService::render_blade("superadmin/dashboard.blade.rs", &ctx);
+        Html(html).into_response()
+    }
+
     /// Daftar Organisasi (GET /sa/organisasi)
     pub async fn list_orgs(req: Request) -> Response {
         let auth = match AuthContext::from_request(&req).await {

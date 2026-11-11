@@ -41,6 +41,15 @@
         </div>
 
         <div class="pg-topbar__user">
+          @if (($area ?? '') == 'sa')
+          <a href="/pilih-organisasi" class="pg-btn pg-btn--outline pg-btn--sm" style="font-size:12px;">
+            🏢 Dashboard Organisasi
+          </a>
+          @elseif (($is_superadmin ?? false) || ($role_label ?? '') == 'SUPERADMIN')
+          <a href="/sa/dashboard" class="pg-btn pg-btn--primary pg-btn--sm" style="font-size:12px; font-weight:700;">
+            🎛️ Portal Superadmin
+          </a>
+          @endif
           <span class="pg-muted">{{ $user_name ?? 'Pengguna' }}</span>
           <span class="pg-chip pg-chip--ok">{{ $role_label ?? 'Pengurus' }}</span>
           <a href="/logout" class="pg-btn pg-btn--outline pg-btn--sm">Keluar</a>

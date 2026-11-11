@@ -7,8 +7,8 @@
     <p class="pg-page-head__subtitle" style="color:var(--pg-muted); font-size:13px; margin:4px 0 0 0;">Riwayat seluruh aksi pengurus, perpindahan sesi, dan tindakan Superadmin.</p>
   </div>
   <div class="pg-page-head__actions">
-    <a href="/sa/organisasi" class="pg-btn pg-btn--secondary">
-      Kembali ke Organisasi
+    <a href="/sa/dashboard" class="pg-btn pg-btn--outline">
+      ← Kembali ke Dashboard Superadmin
     </a>
   </div>
 </header>

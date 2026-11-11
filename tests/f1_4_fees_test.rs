@@ -90,6 +90,7 @@ fn test_render_fee_views_native_blade() {
     }];
 
     ctx_index.insert("matrix_rows", dummy_rows);
+    ctx_index.insert("has_matrix_rows", true);
     ctx_index.insert("total_billed_raw", 50000i64);
     ctx_index.insert("total_collected_raw", 25000i64);
     ctx_index.insert("total_arrears_raw", 25000i64);
@@ -107,6 +108,8 @@ fn test_render_fee_views_native_blade() {
     assert!(rendered_index.contains("Blok B-01"));
     assert!(rendered_index.contains("pg-square-cell--paid"));
     assert!(rendered_index.contains("pg-square-cell--unpaid"));
+    assert!(rendered_index.contains("pg-square-cell--empty"));
+    assert!(rendered_index.contains("Lunas Rp25.000"));
     assert!(rendered_index.contains("Salin Teks WhatsApp"));
 
     // 2. Render fees/tariffs.blade.rs

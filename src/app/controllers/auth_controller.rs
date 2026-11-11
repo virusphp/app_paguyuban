@@ -222,7 +222,7 @@ impl AuthController {
 
         // 7. Redirect ke dashboard atau panel superadmin
         if user.is_superadmin && active_org_id.is_none() {
-            Redirect::to("/sa/organisasi").into_response()
+            Redirect::to("/sa/dashboard").into_response()
         } else {
             Redirect::to("/dashboard").into_response()
         }

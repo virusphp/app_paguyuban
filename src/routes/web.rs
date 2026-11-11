@@ -20,6 +20,7 @@ pub fn router() -> Router<AppState> {
         // Dashboard PC Pengurus
         .get("/dashboard", DashboardController::index)
         // Pengalihan Organisasi Aktif
+        .get("/pilih-organisasi", OrgController::choose_org_view)
         .post("/pilih-organisasi", OrgController::switch_org)
         // Modul Warga & Rumah (F1.3)
         .get("/anggota", MemberController::index)
@@ -83,6 +84,8 @@ pub fn router() -> Router<AppState> {
         .get("/pengaturan", OrgController::settings)
         .post("/pengaturan", OrgController::update_settings)
         // Modul Superadmin (F1.2)
+        .get("/sa", SuperadminController::dashboard)
+        .get("/sa/dashboard", SuperadminController::dashboard)
         .get("/sa/organisasi", SuperadminController::list_orgs)
         .get("/sa/organisasi/baru", SuperadminController::show_create_org)
         .post("/sa/organisasi/baru", SuperadminController::create_org)

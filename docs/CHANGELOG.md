@@ -2,6 +2,34 @@
 
 Semua perubahan pada proyek dicatat secara singkat di sini sesuai aturan `AGENTS.md`.
 
+## [2026-11-11] - Dashboard Khusus Superadmin / Developer, Halaman Pilih Organisasi & Peningkatan UI/UX
+
+### Ditambahkan & Ditingkatkan
+- **Dashboard & Portal Khusus Superadmin / Developer (`/sa` & `/sa/dashboard`)**:
+  - Dibuat controller method `SuperadminController::dashboard` dan view [resources/views/superadmin/dashboard.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/superadmin/dashboard.blade.rs).
+  - Menampilkan ringkasan metrik platform eksekutif: total organisasi, total warga & KK, saldo kas kumulatif se-sistem, serta rasio kepatuhan iuran global.
+  - Menampilkan **Developer & Engine Telemetry Widget**: status Lumina Framework v0.6.1 (Rust Tokio Async + Axum 0.7), PostgreSQL connection pool & RLS active, katalog endpoint REST API v1 (`/api/v1/...`), dan 5 audit logs terkini.
+  - Tabel ringkasan unit paguyuban/RT dengan tombol *"⚡ Masuk Kelola"* untuk langsung impersonate ke organisasi target.
+- **Halaman Pemilih Organisasi (`GET /pilih-organisasi`)**:
+  - Diimplementasikan di `OrgController::choose_org_view` dan [resources/views/org/choose.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/org/choose.blade.rs).
+  - Menyajikan katalog kartu unit paguyuban/RT yang dapat dipilih dengan 1 klik, mengatasi masalah redirect ketika Superadmin belum memilih organisasi aktif.
+- **Penyelarasan Akses Superadmin pada Dashboard Tenant & Topbar Switcher**:
+  - Pada `DashboardController::index`, dropdown switcher organisasi di topbar kini otomatis memuat SEMUA organisasi aktif untuk Superadmin.
+  - Penambahan tombol pintas *"🎛️ Portal Superadmin"* di sidebar pengurus dan topbar saat Superadmin sedang mengelola tenant.
+- **Peningkatan Estetika Desain UI/UX**:
+  - Penambahan animasi pulsing dot status (`.pg-dot-pulse`), efek interaktif kartu (`.pg-card--interactive`), subtle table hover, dan badge status terpadu di [public/css/components.css](file:///d:/PROJECT%20LUMINA/app_paguyuban/public/css/components.css).
+  - Penataan visual di [dashboard/index.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/dashboard/index.blade.rs), [superadmin/organizations.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/superadmin/organizations.blade.rs), dan [superadmin/users.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/superadmin/users.blade.rs).
+- **Perbaikan Matriks Rekapitulasi Iuran 12 Bulan (`/iuran`) & Mesin Template Blade**:
+  - *Akar Masalah*: Evaluasi template nested loop `@forelse` terluar dan `@foreach` terdalam sebelumnya memproses regex loop secara sekuensial per jenis direktif, menyebabkan `@foreach` terdalam dievaluasi sebelum konteks baris warga `@forelse` terluar tersedia (sehingga kolom 12 bulan hilang dan nilai total tergeser ke kolom Jan-Feb).
+  - *Solusi Framework & View*:
+    1. Memperbaiki pipeline `process_loops` pada mesin template Blade Lumina (`framework/src/core/blade.rs`) agar mengevaluasi perulangan berdasarkan urutan kemunculan terluar (*earliest index token*), sehingga pewarisan konteks loop bertingkat (*nested loops*) selalu presisi.
+    2. Menata ulang [resources/views/fees/index.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/fees/index.blade.rs) menggunakan `@if ($has_matrix_rows)` dan `@foreach` bertingkat yang bersih serta variabel format rupiah pre-computed (`amount_formatted`, `total_paid_formatted`, `total_unpaid_formatted`).
+    3. Seluruh 12 kolom bulan (Jan s/d Des) kini tampil konsisten dengan badge interaktif (`✓ Lunas`, `! Belum Lunas [link bayar]`, `- Belum Terbit`) dan kolom akumulasi Total Terbayar & Tunggakan terposisikan tepat di ujung kanan tabel.
+- **Pengujian & Verifikasi**:
+  - Suite pengujian [tests/dashboard_health_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/dashboard_health_test.rs) diperluas dengan `test_render_superadmin_dashboard_blade` dan `test_render_choose_org_blade` (5/5 pengujian lolos 100%).
+  - `cargo fmt --check` dan `cargo clippy --offline` bersih tanpa peringatan.
+
+
 ## [2026-11-10] - Otomatisasi Penerbitan Tagihan Iuran Warga & Sinkronisasi Bulan Berjalan
 
 ### Ditambahkan & Ditingkatkan

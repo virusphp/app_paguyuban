@@ -16,28 +16,48 @@
 
 <!-- 4 Kartu Statistik Finansial & Warga -->
 <div class="pg-grid-4">
-  <div class="pg-card">
-    <div class="pg-card__title">Total Anggota / Warga</div>
-    <div class="pg-stat__value">{{ $total_members }} Jiwa</div>
-    <div class="pg-muted">{{ $total_households }} Kepala Keluarga (KK)</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Total Warga Terdata</div>
+        <div class="pg-stat__value">{{ $total_members }} <span style="font-size:14px; font-weight:normal; color:var(--pg-muted);">Jiwa</span></div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">👥</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">{{ $total_households }} Kepala Keluarga (KK)</div>
   </div>
 
-  <div class="pg-card">
-    <div class="pg-card__title">Saldo Kas Saat Ini</div>
-    <div class="pg-stat__value" style="color:var(--pg-primary);">{{ $current_balance | rupiah }}</div>
-    <div class="pg-muted">Posisi kas riil saat ini</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Saldo Kas Riil</div>
+        <div class="pg-stat__value" style="color:var(--pg-primary);">{{ $current_balance | rupiah }}</div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">💰</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">Posisi kas bersih saat ini</div>
   </div>
 
-  <div class="pg-card">
-    <div class="pg-card__title">Iuran Terkumpul</div>
-    <div class="pg-stat__value" style="color:var(--pg-ok-fg);">{{ $fee_collected | rupiah }}</div>
-    <div class="pg-muted">{{ $collection_percent }}% tingkat kepatuhan</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Iuran Terkumpul</div>
+        <div class="pg-stat__value" style="color:var(--pg-ok-fg);">{{ $fee_collected | rupiah }}</div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">💳</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">{{ $collection_percent }}% tingkat kepatuhan warga</div>
   </div>
 
-  <div class="pg-card">
-    <div class="pg-card__title">Total Tunggakan</div>
-    <div class="pg-stat__value" style="color:var(--pg-bad-fg);">{{ $total_arrears | rupiah }}</div>
-    <div class="pg-muted">{{ $arrears_count }} tagihan belum lunas</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Total Tunggakan</div>
+        <div class="pg-stat__value" style="color:var(--pg-bad-fg);">{{ $total_arrears | rupiah }}</div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">⚠️</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">{{ $arrears_count }} tagihan belum lunas</div>
   </div>
 </div>
 

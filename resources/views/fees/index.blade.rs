@@ -116,7 +116,8 @@
         </tr>
       </thead>
       <tbody>
-        @forelse ($matrix_rows as $row)
+        @if ($has_matrix_rows)
+        @foreach ($matrix_rows as $row)
         <tr>
           <td class="text-left" style="padding-left:16px;">
             <span style="font-weight:600;">{{ $row.house_no }}</span>
@@ -131,12 +132,12 @@
           @foreach ($row.months as $cell)
           <td>
             @if ($cell.status == 'lunas')
-              <span class="pg-square-cell pg-square-cell--paid" title="{{ $cell.month_name }}: Lunas {{ $cell.amount_raw | rupiah }} ({{ $cell.paid_date ?? 'Lunas' }})">✓</span>
+              <span class="pg-square-cell pg-square-cell--paid" title="{{ $cell.month_name }}: Lunas {{ $cell.amount_formatted }} ({{ $cell.paid_date ?? 'Lunas' }})">✓</span>
             @elseif ($cell.status == 'belum')
               @if ($can_manage && $cell.invoice_id)
-                <a href="/iuran/bayar/{{ $cell.invoice_id }}" class="pg-square-cell pg-square-cell--unpaid" title="{{ $cell.month_name }}: Belum Lunas ({{ $cell.amount_raw | rupiah }}). Klik untuk catat pembayaran!">!</a>
+                <a href="/iuran/bayar/{{ $cell.invoice_id }}" class="pg-square-cell pg-square-cell--unpaid" title="{{ $cell.month_name }}: Belum Lunas ({{ $cell.amount_formatted }}). Klik untuk catat pembayaran!">!</a>
               @else
-                <span class="pg-square-cell pg-square-cell--unpaid" title="{{ $cell.month_name }}: Belum Lunas ({{ $cell.amount_raw | rupiah }})">!</span>
+                <span class="pg-square-cell pg-square-cell--unpaid" title="{{ $cell.month_name }}: Belum Lunas ({{ $cell.amount_formatted }})">!</span>
               @endif
             @else
               <span class="pg-square-cell pg-square-cell--empty" title="{{ $cell.month_name }}: Belum Terbit">-</span>
@@ -145,13 +146,14 @@
           @endforeach
 
           <td class="text-right num" style="font-weight:600; color:var(--pg-ok-fg);">
-            {{ $row.total_paid_raw | rupiah }}
+            {{ $row.total_paid_formatted }}
           </td>
           <td class="text-right num" style="font-weight:700; color:var(--pg-bad-fg); padding-right:16px;">
-            {{ $row.total_unpaid_raw | rupiah }}
+            {{ $row.total_unpaid_formatted }}
           </td>
         </tr>
-        @empty
+        @endforeach
+        @else
         <tr>
           <td colspan="16" class="pg-empty">
             <p>Belum ada data warga terdaftar atau tagihan di tahun {{ $selected_year }}.</p>
@@ -160,7 +162,7 @@
             @endif
           </td>
         </tr>
-        @endforelse
+        @endif
       </tbody>
     </table>
   </div>

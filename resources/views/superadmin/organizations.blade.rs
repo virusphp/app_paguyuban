@@ -16,20 +16,37 @@
 
 <!-- Kartu Statistik Superadmin -->
 <div class="pg-grid-3">
-  <div class="pg-card">
-    <div class="pg-card__title">Total Organisasi</div>
-    <div class="pg-stat__value">{{ $total_orgs }}</div>
-    <div class="pg-muted">Terdaftar di sistem</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Total Organisasi</div>
+        <div class="pg-stat__value">{{ $total_orgs }}</div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">🏛️</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">Unit terdaftar di seluruh sistem</div>
   </div>
-  <div class="pg-card">
-    <div class="pg-card__title">Organisasi Aktif</div>
-    <div class="pg-stat__value" style="color:var(--pg-ok-fg);">{{ $active_orgs }}</div>
-    <div class="pg-muted">Beroperasi normal</div>
+
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Organisasi Aktif</div>
+        <div class="pg-stat__value" style="color:var(--pg-ok-fg);">{{ $active_orgs }}</div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">✓</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">Beroperasi aktif dan melayani warga</div>
   </div>
-  <div class="pg-card">
-    <div class="pg-card__title">Menunggu / Nonaktif</div>
-    <div class="pg-stat__value" style="color:var(--pg-warn-fg);">{{ $pending_orgs }}</div>
-    <div class="pg-muted">Perlu perhatian</div>
+
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Menunggu / Nonaktif</div>
+        <div class="pg-stat__value" style="color:var(--pg-warn-fg);">{{ $pending_orgs }}</div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">⏳</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">Perlu verifikasi atau tinjauan admin</div>
   </div>
 </div>
 
@@ -83,8 +100,8 @@
               <!-- Masuk Sebagai Admin (Impersonasi) -->
               <form action="/sa/impersonasi/{{ $org.id }}" method="POST" style="display:inline;">
                 @csrf
-                <button type="submit" class="pg-btn pg-btn--secondary" style="padding:6px 12px; font-size:13px;" title="Kelola langsung sebagai Admin organisasi ini">
-                  Masuk sebagai Admin
+                <button type="submit" class="pg-btn pg-btn--primary" style="padding:6px 12px; font-size:13px;" title="Kelola langsung sebagai Admin organisasi ini">
+                  ⚡ Masuk Kelola
                 </button>
               </form>
 

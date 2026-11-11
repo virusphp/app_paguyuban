@@ -17,7 +17,14 @@ impl DashboardController {
         };
 
         let user_id = auth.user_id;
-        let user_name = auth.user_name;
+        let user_name = auth.user_name.clone();
+        let is_superadmin = auth.is_superadmin;
+
+        // Jika belum ada organisasi aktif yang dipilih, arahkan ke halaman pilih organisasi
+        if auth.current_org_id.is_none() {
+            return axum::response::Redirect::to("/pilih-organisasi").into_response();
+        }
+
         let current_org_id_str = auth.current_org_id.map(|u| u.to_string());
         let current_org_name = auth
             .current_org_name
@@ -37,25 +44,40 @@ impl DashboardController {
         };
 
         // 2. Ambil daftar organisasi yang dimiliki pengguna untuk dropdown switcher
+        // Jika Superadmin, ambil seluruh organisasi aktif di sistem
         #[derive(sqlx::FromRow, serde::Serialize)]
         struct OrgItem {
             id: String,
             name: String,
         }
 
-        let user_orgs_raw: Vec<(Uuid, String)> = sqlx::query_as(
-            r#"
-            SELECT o.id, o.name
-            FROM memberships m
-            JOIN organizations o ON m.org_id = o.id
-            WHERE m.user_id = $1 AND o.status = 'aktif'
-            ORDER BY o.name ASC;
-            "#,
-        )
-        .bind(user_id)
-        .fetch_all(&pool)
-        .await
-        .unwrap_or_default();
+        let user_orgs_raw: Vec<(Uuid, String)> = if is_superadmin {
+            sqlx::query_as(
+                r#"
+                SELECT id, name
+                FROM organizations
+                WHERE status = 'aktif'
+                ORDER BY name ASC;
+                "#,
+            )
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default()
+        } else {
+            sqlx::query_as(
+                r#"
+                SELECT o.id, o.name
+                FROM memberships m
+                JOIN organizations o ON m.org_id = o.id
+                WHERE m.user_id = $1 AND o.status = 'aktif'
+                ORDER BY o.name ASC;
+                "#,
+            )
+            .bind(user_id)
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default()
+        };
 
         let user_orgs: Vec<OrgItem> = user_orgs_raw
             .into_iter()
@@ -248,6 +270,7 @@ impl DashboardController {
         ctx.insert("current_org_id", current_org_id_str.unwrap_or_default());
         ctx.insert("role_label", current_role.to_uppercase());
         ctx.insert("can_manage", can_manage);
+        ctx.insert("is_superadmin", is_superadmin);
         ctx.insert("user_orgs", user_orgs);
 
         ctx.insert("total_members", total_members);

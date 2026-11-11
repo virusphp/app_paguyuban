@@ -1,13 +1,14 @@
 use axum::{
     extract::Form,
-    response::{IntoResponse, Redirect, Response},
+    response::{Html, IntoResponse, Redirect, Response},
 };
+use lumina::core::blade::BladeContext;
 use lumina::prelude::Request;
 use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::app::services::AuthContext;
+use crate::app::services::{AuthContext, ViewService};
 
 #[derive(Debug, Deserialize)]
 pub struct SwitchOrgForm {
@@ -22,6 +23,103 @@ pub struct UpdateOrgForm {
 pub struct OrgController;
 
 impl OrgController {
+    /// Halaman Pilih Organisasi (GET /pilih-organisasi)
+    pub async fn choose_org_view(req: Request) -> Response {
+        let auth = match AuthContext::from_request(&req).await {
+            Ok(ctx) => ctx,
+            Err(res) => return res,
+        };
+
+        let user_id = auth.user_id;
+        let is_superadmin = auth.is_superadmin;
+
+        let db_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            "postgres://postgres:postgres@127.0.0.1:54322/db_paguyuban".to_string()
+        });
+
+        let pool = match sqlx::PgPool::connect(&db_url).await {
+            Ok(p) => p,
+            Err(_) => return Redirect::to("/login").into_response(),
+        };
+
+        #[derive(serde::Serialize)]
+        struct OrgCard {
+            id: String,
+            name: String,
+            org_type: String,
+            role: String,
+            members_count: i64,
+            is_active: bool,
+        }
+
+        let orgs: Vec<OrgCard> = if is_superadmin {
+            let rows: Vec<(Uuid, String, String, i64)> = sqlx::query_as(
+                r#"
+                SELECT o.id, o.name, o.type, 
+                       COALESCE((SELECT COUNT(*) FROM members m WHERE m.org_id = o.id AND m.status = 'aktif'), 0) as members_count
+                FROM organizations o
+                WHERE o.status = 'aktif'
+                ORDER BY o.name ASC;
+                "#,
+            )
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default();
+
+            rows.into_iter()
+                .map(|(id, name, org_type, count)| {
+                    let is_current = auth.current_org_id.map(|cid| cid == id).unwrap_or(false);
+                    OrgCard {
+                        id: id.to_string(),
+                        name,
+                        org_type,
+                        role: "Superadmin (Akses Penuh)".to_string(),
+                        members_count: count,
+                        is_active: is_current,
+                    }
+                })
+                .collect()
+        } else {
+            let rows: Vec<(Uuid, String, String, String, i64)> = sqlx::query_as(
+                r#"
+                SELECT o.id, o.name, o.type, m.role,
+                       COALESCE((SELECT COUNT(*) FROM members mem WHERE mem.org_id = o.id AND mem.status = 'aktif'), 0) as members_count
+                FROM memberships m
+                JOIN organizations o ON m.org_id = o.id
+                WHERE m.user_id = $1 AND o.status = 'aktif'
+                ORDER BY o.name ASC;
+                "#,
+            )
+            .bind(user_id)
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default();
+
+            rows.into_iter()
+                .map(|(id, name, org_type, role, count)| {
+                    let is_current = auth.current_org_id.map(|cid| cid == id).unwrap_or(false);
+                    OrgCard {
+                        id: id.to_string(),
+                        name,
+                        org_type,
+                        role,
+                        members_count: count,
+                        is_active: is_current,
+                    }
+                })
+                .collect()
+        };
+
+        let mut ctx = BladeContext::new();
+        ctx.insert("title", "Pilih Organisasi — Aplikasi Paguyuban");
+        ctx.insert("user_name", &auth.user_name);
+        ctx.insert("is_superadmin", is_superadmin);
+        ctx.insert("orgs", orgs);
+
+        let html = ViewService::render_blade("org/choose.blade.rs", &ctx);
+        Html(html).into_response()
+    }
+
     /// Beralih organisasi aktif (POST /pilih-organisasi)
     pub async fn switch_org(req: Request, Form(payload): Form<SwitchOrgForm>) -> Response {
         let auth = match AuthContext::from_request(&req).await {

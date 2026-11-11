@@ -73,7 +73,8 @@ fn test_render_dashboard_overview_blade() {
     // Verifikasi konten penting
     assert!(html.contains("Dashboard Ringkasan"));
     assert!(html.contains("Paguyuban Kanfer 2"));
-    assert!(html.contains("125 Jiwa"));
+    assert!(html.contains("125"));
+    assert!(html.contains("Jiwa"));
     assert!(html.contains("42 Kepala Keluarga"));
     assert!(html.contains("82%"));
     assert!(html.contains("Aktivitas Kas Terbaru"));
@@ -187,4 +188,118 @@ fn test_render_superadmin_users_blade() {
     assert!(html.contains("081111111111"));
     assert!(html.contains("Ketua RT"));
     assert!(html.contains("Paguyuban Kanfer 2 (admin)"));
+}
+
+#[test]
+fn test_render_superadmin_dashboard_blade() {
+    let mut ctx = BladeContext::new();
+    ctx.insert("title", "Portal Superadmin & Developer — Sistem Paguyuban");
+    ctx.insert("area", "sa");
+    ctx.insert("active", "dashboard");
+    ctx.insert("user_name", "Super Administrator");
+    ctx.insert("role_label", "SUPERADMIN");
+    ctx.insert("org_name", "Pusat Kontrol Superadmin");
+
+    ctx.insert("total_orgs", 12);
+    ctx.insert("active_orgs", 10);
+    ctx.insert("total_members", 480);
+    ctx.insert("total_households", 160);
+    ctx.insert("total_users", 24);
+    ctx.insert("global_cash_balance", 45000000i64);
+    ctx.insert("total_invoices_count", 960);
+    ctx.insert("paid_invoices_count", 820);
+    ctx.insert("global_compliance_percent", 85);
+
+    #[derive(serde::Serialize)]
+    struct DummyTopOrg {
+        id: Uuid,
+        name: String,
+        org_type: String,
+        status: String,
+        members_count: i64,
+    }
+
+    let top_orgs = vec![
+        DummyTopOrg {
+            id: Uuid::new_v4(),
+            name: "Paguyuban Kanfer 2".to_string(),
+            org_type: "paguyuban".to_string(),
+            status: "aktif".to_string(),
+            members_count: 125,
+        },
+        DummyTopOrg {
+            id: Uuid::new_v4(),
+            name: "RT 05 RW 09 Slamaran".to_string(),
+            org_type: "rt".to_string(),
+            status: "aktif".to_string(),
+            members_count: 48,
+        },
+    ];
+    ctx.insert("top_orgs", top_orgs);
+
+    #[derive(serde::Serialize)]
+    struct DummyRecentLog {
+        created_at: String,
+        actor_name: String,
+        action: String,
+        org_name: Option<String>,
+    }
+
+    let logs = vec![DummyRecentLog {
+        created_at: "11 Nov 18:00".to_string(),
+        actor_name: "Super Admin".to_string(),
+        action: "CREATE_ORG".to_string(),
+        org_name: Some("RT 05 RW 09 Slamaran".to_string()),
+    }];
+    ctx.insert("recent_logs", logs);
+
+    let html = ViewService::render_blade("superadmin/dashboard.blade.rs", &ctx);
+
+    assert!(
+        html.contains("PORTAL SUPERADMIN &amp; DEVELOPER")
+            || html.contains("PORTAL SUPERADMIN & DEVELOPER")
+    );
+    assert!(
+        html.contains("Developer &amp; Engine Telemetry")
+            || html.contains("Developer & Engine Telemetry")
+    );
+    assert!(html.contains("Lumina Framework v0.6.1 (Rust)"));
+    assert!(html.contains("PostgreSQL (SQLx Pool)"));
+    assert!(html.contains("Paguyuban Kanfer 2"));
+    assert!(html.contains("RT 05 RW 09 Slamaran"));
+}
+
+#[test]
+fn test_render_choose_org_blade() {
+    let mut ctx = BladeContext::new();
+    ctx.insert("title", "Pilih Organisasi — Aplikasi Paguyuban");
+    ctx.insert("user_name", "Super Administrator");
+    ctx.insert("is_superadmin", true);
+
+    #[derive(serde::Serialize)]
+    struct DummyChooseOrg {
+        id: String,
+        name: String,
+        org_type: String,
+        role: String,
+        members_count: i64,
+        is_active: bool,
+    }
+
+    let orgs = vec![DummyChooseOrg {
+        id: Uuid::new_v4().to_string(),
+        name: "RT 05 RW 09 Slamaran".to_string(),
+        org_type: "rt".to_string(),
+        role: "Superadmin (Akses Penuh)".to_string(),
+        members_count: 48,
+        is_active: true,
+    }];
+    ctx.insert("orgs", orgs);
+
+    let html = ViewService::render_blade("org/choose.blade.rs", &ctx);
+
+    assert!(html.contains("Pilih Lingkungan / Organisasi"));
+    assert!(html.contains("RT 05 RW 09 Slamaran"));
+    assert!(html.contains("Superadmin (Akses Penuh)"));
+    assert!(html.contains("48 Warga Terdata"));
 }

@@ -10,15 +10,25 @@
 
 <!-- 2 Kartu Statistik Pengguna -->
 <div class="pg-grid-3">
-  <div class="pg-card">
-    <div class="pg-card__title">Total Pengguna Terdaftar</div>
-    <div class="pg-stat__value">{{ $total_users }} Akun</div>
-    <div class="pg-muted">Warga & pengurus berakun</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Total Pengguna Terdaftar</div>
+        <div class="pg-stat__value">{{ $total_users }} <span style="font-size:14px; font-weight:normal; color:var(--pg-muted);">Akun</span></div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">👥</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">Warga &amp; pengurus berakun login</div>
   </div>
-  <div class="pg-card">
-    <div class="pg-card__title">Akses Superadmin</div>
-    <div class="pg-stat__value" style="color:var(--pg-primary);">{{ $total_superadmins }} Akun</div>
-    <div class="pg-muted">Hak kelola lintas organisasi</div>
+  <div class="pg-card pg-card--interactive">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="pg-card__title">Akses Superadmin</div>
+        <div class="pg-stat__value" style="color:var(--pg-primary);">{{ $total_superadmins }} <span style="font-size:14px; font-weight:normal; color:var(--pg-muted);">Akun</span></div>
+      </div>
+      <span style="font-size:22px; opacity:0.8;">🛡️</span>
+    </div>
+    <div class="pg-muted" style="margin-top:6px;">Hak kelola penuh lintas organisasi</div>
   </div>
 </div>
 

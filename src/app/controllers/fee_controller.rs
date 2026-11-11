@@ -281,7 +281,9 @@ impl FeeController {
         ctx.insert("available_years", available_years);
         ctx.insert("query_search", search_text);
 
+        let has_matrix_rows = !matrix_rows.is_empty();
         ctx.insert("matrix_rows", matrix_rows);
+        ctx.insert("has_matrix_rows", has_matrix_rows);
         ctx.insert("total_billed_raw", total_billed_idr);
         ctx.insert(
             "total_billed_formatted",

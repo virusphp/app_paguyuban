@@ -2,6 +2,19 @@
 
 Semua perubahan pada proyek dicatat secara singkat di sini sesuai aturan `AGENTS.md`.
 
+## [2026-11-12] - Penanganan Default Konteks Superadmin & Perbaikan Query Enum Pilih Organisasi
+
+### Diperbaiki & Ditingkatkan
+- **Perbaikan Query Database SQLx Enum pada Halaman Pemilih Organisasi (`GET /pilih-organisasi`)**:
+  - *Akar Masalah*: Query `SELECT o.id, o.name, o.type FROM organizations` di `OrgController::choose_org_view` gagal melakukan decode tipe enum kustom PostgreSQL (`org_type` dan `org_role`) ke tipe `String` Rust secara langsung, mengakibatkan error runtime tersembunyi yang ditangkap oleh `.unwrap_or_default()` menjadi daftar kosong (`vec![]`). Inilah penyebab tampilan *"Anda belum terdaftar pada organisasi mana pun"* padahal database memiliki unit aktif.
+  - *Solusi*: Menambahkan explicit cast `o.type::text as org_type` dan `m.role::text as role` pada query SQLx cabang Superadmin dan cabang Pengguna Biasa di [src/app/controllers/org_controller.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/src/app/controllers/org_controller.rs). Seluruh kartu unit paguyuban/RT kini tampil lengkap dengan lencana jenis dan tombol *"Masuk Kelola &rarr;"*.
+- **Inisialisasi Otomatis Konteks Organisasi Default untuk Superadmin (`AuthController`)**:
+  - *Akar Masalah*: Superadmin merupakan akun global tanpa entri di tabel `memberships`. Saat Superadmin login dan langsung mengklik menu tenant seperti `/anggota`, guard `require_org` mendeteksi ketiadaan `current_org_id` di sesi dan mengalihkan ke `/pilih-organisasi`.
+  - *Solusi*: Pada saat login Superadmin di [src/app/controllers/auth_controller.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/src/app/controllers/auth_controller.rs), sistem kini otomatis mengambil organisasi aktif pertama dari database dan menyimpannya sebagai konteks kerja default (`current_org_id`, `current_org_name`, `current_role = "admin"`). Dengan begitu, Superadmin dapat langsung membuka menu `/anggota`, `/iuran`, atau `/kas` tanpa terlempar keluar.
+- **Verifikasi Pengujian**:
+  - Seluruh pengujian [tests/dashboard_health_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/dashboard_health_test.rs) (5 test), [tests/f1_2_superadmin_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/f1_2_superadmin_test.rs), dan [tests/f1_4_fees_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/f1_4_fees_test.rs) lolos 100%.
+  - `cargo clippy --offline -j 1` lolos tanpa peringatan logika.
+
 ## [2026-11-11] - Dashboard Khusus Superadmin / Developer, Halaman Pilih Organisasi & Peningkatan UI/UX
 
 ### Ditambahkan & Ditingkatkan

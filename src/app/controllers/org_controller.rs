@@ -55,7 +55,7 @@ impl OrgController {
         let orgs: Vec<OrgCard> = if is_superadmin {
             let rows: Vec<(Uuid, String, String, i64)> = sqlx::query_as(
                 r#"
-                SELECT o.id, o.name, o.type, 
+                SELECT o.id, o.name, o.type::text as org_type, 
                        COALESCE((SELECT COUNT(*) FROM members m WHERE m.org_id = o.id AND m.status = 'aktif'), 0) as members_count
                 FROM organizations o
                 WHERE o.status = 'aktif'
@@ -82,7 +82,7 @@ impl OrgController {
         } else {
             let rows: Vec<(Uuid, String, String, String, i64)> = sqlx::query_as(
                 r#"
-                SELECT o.id, o.name, o.type, m.role,
+                SELECT o.id, o.name, o.type::text as org_type, m.role::text as role,
                        COALESCE((SELECT COUNT(*) FROM members mem WHERE mem.org_id = o.id AND mem.status = 'aktif'), 0) as members_count
                 FROM memberships m
                 JOIN organizations o ON m.org_id = o.id

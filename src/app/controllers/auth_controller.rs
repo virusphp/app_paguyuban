@@ -194,15 +194,36 @@ impl AuthController {
                 .await;
             Some(first_org.id)
         } else if user.is_superadmin {
-            let _ = req
-                .session
-                .insert("current_org_name", "Superadmin".to_string())
-                .await;
-            let _ = req
-                .session
-                .insert("current_role", "superadmin".to_string())
-                .await;
-            None
+            // Ambil organisasi aktif pertama sebagai konteks kerja default jika ada
+            let default_org: Option<(Uuid, String)> = sqlx::query_as(
+                "SELECT id, name FROM organizations WHERE status = 'aktif' ORDER BY name ASC LIMIT 1",
+            )
+            .fetch_optional(&pool)
+            .await
+            .unwrap_or(None);
+
+            if let Some((org_id, org_name)) = default_org {
+                let _ = req
+                    .session
+                    .insert("current_org_id", org_id.to_string())
+                    .await;
+                let _ = req.session.insert("current_org_name", org_name).await;
+                let _ = req
+                    .session
+                    .insert("current_role", "admin".to_string())
+                    .await;
+                Some(org_id)
+            } else {
+                let _ = req
+                    .session
+                    .insert("current_org_name", "Superadmin".to_string())
+                    .await;
+                let _ = req
+                    .session
+                    .insert("current_role", "superadmin".to_string())
+                    .await;
+                None
+            }
         } else {
             None
         };

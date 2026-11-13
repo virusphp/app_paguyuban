@@ -131,7 +131,7 @@
             @endif
           </td>
           <td class="num" style="font-weight:700; color:@if ($tx.kind == 'masuk') var(--pg-ok-fg) @else var(--pg-bad-fg) @endif;">
-            @if ($tx.kind == 'masuk')+@else-@endif{{ $tx.amount_formatted }}
+            @if ($tx.kind == 'masuk') +{{ $tx.amount_formatted }} @else -{{ $tx.amount_formatted }} @endif
           </td>
           <td class="num" style="font-weight:700; color:var(--pg-primary); padding-right:16px;">
             {{ $tx.running_balance_formatted }}

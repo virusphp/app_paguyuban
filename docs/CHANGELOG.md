@@ -2,6 +2,18 @@
 
 Semua perubahan pada proyek dicatat secara singkat di sini sesuai aturan `AGENTS.md`.
 
+## [2026-11-13] - Perbaikan Bocoran Sintaks `@else` pada Tampilan Kas & Parser Direktif Blade
+
+### Diperbaiki & Ditingkatkan
+- **Perbaikan Direktif `@else` Inline pada Mesin Template Blade Lumina (`framework/src/core/blade.rs`)**:
+  - *Akar Masalah*: Evaluasi token direktif `@else` sebelumnya hanya mencocokkan karakter spasi atau tag `<` (`slice[5..].starts_with(...)`). Pada penulisan inline seperti `@if ($tx.kind == 'masuk')+@else-@endif`, karakter setelah `@else` adalah tanda minus (`-`). Parser gagal mengenali token `@else-` sebagai direktif percabangan sehingga karakter `@else-` dianggap sebagai teks biasa di dalam blok `@if`, memicu tampilan `+@else-Rp30.000` di browser.
+  - *Solusi Framework*: Diperbaiki agar token direktif `@else` valid selama karakter berikutnya bukan karakter alfanumerik/identifikasi (`!slice[5..].starts_with(|c: char| c.is_alphanumeric() || c == '_')`), sehingga mendukung karakter tanda baca (`-`, `+`, `/`, `"`), emoji, dan ekspresi inline lainnya.
+- **Pembersihan Template Mutasi Kas & Dashboard Tenant**:
+  - Merapikan penulisan nominal transaksi di [resources/views/cash/index.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/cash/index.blade.rs) dan [resources/views/dashboard/index.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/dashboard/index.blade.rs) menjadi `@if ($tx.kind == 'masuk') +{{ $tx.amount_formatted }} @else -{{ $tx.amount_formatted }} @endif`.
+- **Verifikasi Pengujian**:
+  - Seluruh pengujian [tests/f1_5_cash_lpj_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/f1_5_cash_lpj_test.rs) dan [tests/dashboard_health_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/dashboard_health_test.rs) lolos 100%.
+  - `cargo clippy --offline -j 1` lolos tanpa peringatan logika.
+
 ## [2026-11-12] - Penanganan Default Konteks Superadmin & Perbaikan Query Enum Pilih Organisasi
 
 ### Diperbaiki & Ditingkatkan

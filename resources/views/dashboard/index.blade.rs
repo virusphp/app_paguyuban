@@ -95,7 +95,7 @@
                 <span class="pg-chip" style="font-size:11px;">{{ $tx.category }}</span>
               </td>
               <td style="text-align:right; padding-right:20px; font-weight:700; @if ($tx.tone == 'ok')color:var(--pg-ok-fg);@else color:var(--pg-bad-fg);@endif">
-                @if ($tx.tone == 'ok')+@else-@endif Rp{{ $tx.amount }}
+                @if ($tx.tone == 'ok') + Rp{{ $tx.amount }} @else - Rp{{ $tx.amount }} @endif
               </td>
             </tr>
             @empty

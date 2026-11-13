@@ -20,8 +20,22 @@ pub struct MemberFilterQuery {
 #[derive(Debug, Deserialize)]
 pub struct CreateMemberForm {
     pub full_name: String,
+    pub nik: Option<String>,
+    pub gender: Option<String>,
     pub phone: Option<String>,
+    pub birth_place: Option<String>,
+    pub birth_date: Option<String>,
+    pub religion: Option<String>,
+    pub occupation: Option<String>,
+    pub family_role: Option<String>,
+    pub is_head_of_family: Option<String>,
+    pub is_fee_payer: Option<String>,
+    pub emergency_phone: Option<String>,
+    pub notes: Option<String>,
     pub house_no: String,
+    pub family_card_no: Option<String>,
+    pub ownership_status: Option<String>,
+    pub rt_rw: Option<String>,
     pub house_note: Option<String>,
     pub status: String,
     pub joined_on: Option<String>,
@@ -308,6 +322,55 @@ impl MemberController {
 
         let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
+        #[derive(serde::Serialize)]
+        struct MemberFormView {
+            id: String,
+            full_name: String,
+            nik: String,
+            gender: String,
+            phone: String,
+            birth_place: String,
+            birth_date: String,
+            religion: String,
+            occupation: String,
+            family_role: String,
+            is_head_of_family: bool,
+            is_fee_payer: bool,
+            emergency_phone: String,
+            notes: String,
+            house_no: String,
+            family_card_no: String,
+            ownership_status: String,
+            rt_rw: String,
+            house_note: String,
+            status: String,
+            joined_on: String,
+        }
+
+        let default_member = MemberFormView {
+            id: String::new(),
+            full_name: String::new(),
+            nik: String::new(),
+            gender: "Laki-laki".to_string(),
+            phone: String::new(),
+            birth_place: String::new(),
+            birth_date: String::new(),
+            religion: "Islam".to_string(),
+            occupation: String::new(),
+            family_role: "Kepala Keluarga".to_string(),
+            is_head_of_family: true,
+            is_fee_payer: true,
+            emergency_phone: String::new(),
+            notes: String::new(),
+            house_no: String::new(),
+            family_card_no: String::new(),
+            ownership_status: "Milik Sendiri".to_string(),
+            rt_rw: String::new(),
+            house_note: String::new(),
+            status: "aktif".to_string(),
+            joined_on: today.clone(),
+        };
+
         let mut ctx = BladeContext::new();
         ctx.insert("title", "Tambah Warga Baru");
         ctx.insert("area", "admin");
@@ -321,7 +384,9 @@ impl MemberController {
         );
         ctx.insert("is_edit", false);
         ctx.insert("today_date", today);
+        ctx.insert("member", default_member);
         ctx.insert("existing_houses", existing_houses);
+        ctx.insert("error", "");
 
         let html = ViewService::render_blade("members/form.blade.rs", &ctx);
         Html(html).into_response()
@@ -345,17 +410,92 @@ impl MemberController {
 
         let full_name = payload.full_name.trim();
         let house_no = payload.house_no.trim();
+        let nik = payload
+            .nik
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let gender = payload
+            .gender
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Laki-laki");
         let phone = payload
             .phone
             .as_deref()
             .map(str::trim)
-            .filter(|p| !p.is_empty());
-        let status = payload.status.trim();
+            .filter(|s| !s.is_empty());
+        let birth_place = payload
+            .birth_place
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let birth_date = payload
+            .birth_date
+            .as_deref()
+            .and_then(|d| NaiveDate::parse_from_str(d, "%Y-%m-%d").ok());
+        let religion = payload
+            .religion
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Islam");
+        let occupation = payload
+            .occupation
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let family_role = payload
+            .family_role
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Kepala Keluarga");
+        let is_head_of_family = payload
+            .is_head_of_family
+            .as_deref()
+            .map(|v| v == "1" || v == "on" || v == "true")
+            .unwrap_or(false)
+            || family_role == "Kepala Keluarga";
+        let is_fee_payer = payload
+            .is_fee_payer
+            .as_deref()
+            .map(|v| v == "1" || v == "on" || v == "true")
+            .unwrap_or(true);
+        let emergency_phone = payload
+            .emergency_phone
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let notes = payload
+            .notes
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+
+        let family_card_no = payload
+            .family_card_no
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let ownership_status = payload
+            .ownership_status
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Milik Sendiri");
+        let rt_rw = payload
+            .rt_rw
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
         let house_note = payload
             .house_note
             .as_deref()
             .map(str::trim)
-            .filter(|n| !n.is_empty());
+            .filter(|s| !s.is_empty());
+        let status = payload.status.trim();
 
         if full_name.is_empty() || house_no.is_empty() {
             return Redirect::to("/anggota/baru").into_response();
@@ -381,7 +521,7 @@ impl MemberController {
             Err(_) => return Redirect::to("/anggota/baru").into_response(),
         };
 
-        // 1. Cari atau buat household
+        // 1. Cari atau buat/update household
         let household_id: Uuid = match sqlx::query_scalar::<_, Uuid>(
             "SELECT id FROM households WHERE org_id = $1 AND house_no = $2",
         )
@@ -390,18 +530,41 @@ impl MemberController {
         .fetch_optional(&mut *tx)
         .await
         {
-            Ok(Some(id)) => id,
+            Ok(Some(id)) => {
+                let _ = sqlx::query(
+                    r#"
+                    UPDATE households 
+                    SET family_card_no = COALESCE($1, family_card_no),
+                        ownership_status = COALESCE($2, ownership_status),
+                        rt_rw = COALESCE($3, rt_rw),
+                        note = COALESCE($4, note)
+                    WHERE id = $5 AND org_id = $6;
+                    "#,
+                )
+                .bind(family_card_no)
+                .bind(ownership_status)
+                .bind(rt_rw)
+                .bind(house_note)
+                .bind(id)
+                .bind(org_id)
+                .execute(&mut *tx)
+                .await;
+                id
+            }
             _ => {
                 let new_house_id = Uuid::new_v4();
                 let res = sqlx::query(
                     r#"
-                    INSERT INTO households (id, org_id, house_no, note)
-                    VALUES ($1, $2, $3, $4);
+                    INSERT INTO households (id, org_id, house_no, family_card_no, ownership_status, rt_rw, note)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7);
                     "#,
                 )
                 .bind(new_house_id)
                 .bind(org_id)
                 .bind(house_no)
+                .bind(family_card_no)
+                .bind(ownership_status)
+                .bind(rt_rw)
                 .bind(house_note)
                 .execute(&mut *tx)
                 .await;
@@ -416,19 +579,35 @@ impl MemberController {
             }
         };
 
-        // 2. Insert member
+        // 2. Insert member lengkap
         let member_id = Uuid::new_v4();
         let insert_res = sqlx::query(
             r#"
-            INSERT INTO members (id, org_id, household_id, full_name, phone, status, joined_on)
-            VALUES ($1, $2, $3, $4, $5, $6, $7);
+            INSERT INTO members (
+                id, org_id, household_id, full_name, nik, gender, phone,
+                birth_place, birth_date, religion, occupation, family_role,
+                is_head_of_family, is_fee_payer, emergency_phone, notes,
+                status, joined_on
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);
             "#,
         )
         .bind(member_id)
         .bind(org_id)
         .bind(household_id)
         .bind(full_name)
+        .bind(nik)
+        .bind(gender)
         .bind(phone)
+        .bind(birth_place)
+        .bind(birth_date)
+        .bind(religion)
+        .bind(occupation)
+        .bind(family_role)
+        .bind(is_head_of_family)
+        .bind(is_fee_payer)
+        .bind(emergency_phone)
+        .bind(notes)
         .bind(status)
         .bind(joined_on)
         .execute(&mut *tx)
@@ -453,6 +632,7 @@ impl MemberController {
         .bind(json!({
             "full_name": full_name,
             "house_no": house_no,
+            "nik": nik,
             "phone": phone
         }))
         .execute(&mut *tx)
@@ -501,26 +681,79 @@ impl MemberController {
             Err(_) => return Redirect::to("/anggota").into_response(),
         };
 
-        #[derive(sqlx::FromRow, serde::Serialize)]
-        struct MemberDetail {
+        #[derive(serde::Serialize)]
+        struct MemberFormView {
+            id: String,
+            full_name: String,
+            nik: String,
+            gender: String,
+            phone: String,
+            birth_place: String,
+            birth_date: String,
+            religion: String,
+            occupation: String,
+            family_role: String,
+            is_head_of_family: bool,
+            is_fee_payer: bool,
+            emergency_phone: String,
+            notes: String,
+            house_no: String,
+            family_card_no: String,
+            ownership_status: String,
+            rt_rw: String,
+            house_note: String,
+            status: String,
+            joined_on: String,
+        }
+
+        #[derive(sqlx::FromRow)]
+        struct MemberDetailRow {
             id: Uuid,
             full_name: String,
+            nik: Option<String>,
+            gender: Option<String>,
             phone: Option<String>,
+            birth_place: Option<String>,
+            birth_date: Option<NaiveDate>,
+            religion: Option<String>,
+            occupation: Option<String>,
+            family_role: Option<String>,
+            is_head_of_family: Option<bool>,
+            is_fee_payer: Option<bool>,
+            emergency_phone: Option<String>,
+            notes: Option<String>,
             status: String,
             joined_on: NaiveDate,
             house_no: Option<String>,
+            family_card_no: Option<String>,
+            ownership_status: Option<String>,
+            rt_rw: Option<String>,
             house_note: Option<String>,
         }
 
-        let member: Option<MemberDetail> = sqlx::query_as(
+        let row: Option<MemberDetailRow> = sqlx::query_as(
             r#"
             SELECT 
                 m.id,
                 m.full_name,
+                m.nik,
+                m.gender,
                 m.phone,
+                m.birth_place,
+                m.birth_date,
+                m.religion,
+                m.occupation,
+                m.family_role,
+                m.is_head_of_family,
+                m.is_fee_payer,
+                m.emergency_phone,
+                m.notes,
                 m.status,
                 m.joined_on,
                 h.house_no,
+                h.family_card_no,
+                h.ownership_status,
+                h.rt_rw,
                 h.note as house_note
             FROM members m
             LEFT JOIN households h ON m.household_id = h.id
@@ -533,9 +766,40 @@ impl MemberController {
         .await
         .unwrap_or(None);
 
-        let member = match member {
-            Some(m) => m,
+        let row = match row {
+            Some(r) => r,
             None => return Redirect::to("/anggota").into_response(),
+        };
+
+        let member = MemberFormView {
+            id: row.id.to_string(),
+            full_name: row.full_name,
+            nik: row.nik.unwrap_or_default(),
+            gender: row.gender.unwrap_or_else(|| "Laki-laki".to_string()),
+            phone: row.phone.unwrap_or_default(),
+            birth_place: row.birth_place.unwrap_or_default(),
+            birth_date: row
+                .birth_date
+                .map(|d| d.format("%Y-%m-%d").to_string())
+                .unwrap_or_default(),
+            religion: row.religion.unwrap_or_else(|| "Islam".to_string()),
+            occupation: row.occupation.unwrap_or_default(),
+            family_role: row
+                .family_role
+                .unwrap_or_else(|| "Kepala Keluarga".to_string()),
+            is_head_of_family: row.is_head_of_family.unwrap_or(false),
+            is_fee_payer: row.is_fee_payer.unwrap_or(true),
+            emergency_phone: row.emergency_phone.unwrap_or_default(),
+            notes: row.notes.unwrap_or_default(),
+            status: row.status,
+            joined_on: row.joined_on.format("%Y-%m-%d").to_string(),
+            house_no: row.house_no.unwrap_or_default(),
+            family_card_no: row.family_card_no.unwrap_or_default(),
+            ownership_status: row
+                .ownership_status
+                .unwrap_or_else(|| "Milik Sendiri".to_string()),
+            rt_rw: row.rt_rw.unwrap_or_default(),
+            house_note: row.house_note.unwrap_or_default(),
         };
 
         #[derive(sqlx::FromRow, serde::Serialize)]
@@ -566,6 +830,8 @@ impl MemberController {
         ctx.insert("is_edit", true);
         ctx.insert("member", member);
         ctx.insert("existing_houses", existing_houses);
+        ctx.insert("today_date", row.joined_on.format("%Y-%m-%d").to_string());
+        ctx.insert("error", "");
 
         let html = ViewService::render_blade("members/form.blade.rs", &ctx);
         Html(html).into_response()
@@ -593,17 +859,92 @@ impl MemberController {
 
         let full_name = payload.full_name.trim();
         let house_no = payload.house_no.trim();
+        let nik = payload
+            .nik
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let gender = payload
+            .gender
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Laki-laki");
         let phone = payload
             .phone
             .as_deref()
             .map(str::trim)
             .filter(|p| !p.is_empty());
-        let status = payload.status.trim();
+        let birth_place = payload
+            .birth_place
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let birth_date = payload
+            .birth_date
+            .as_deref()
+            .and_then(|d| NaiveDate::parse_from_str(d, "%Y-%m-%d").ok());
+        let religion = payload
+            .religion
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Islam");
+        let occupation = payload
+            .occupation
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let family_role = payload
+            .family_role
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Kepala Keluarga");
+        let is_head_of_family = payload
+            .is_head_of_family
+            .as_deref()
+            .map(|v| v == "1" || v == "on" || v == "true")
+            .unwrap_or(false)
+            || family_role == "Kepala Keluarga";
+        let is_fee_payer = payload
+            .is_fee_payer
+            .as_deref()
+            .map(|v| v == "1" || v == "on" || v == "true")
+            .unwrap_or(true);
+        let emergency_phone = payload
+            .emergency_phone
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let notes = payload
+            .notes
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+
+        let family_card_no = payload
+            .family_card_no
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        let ownership_status = payload
+            .ownership_status
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("Milik Sendiri");
+        let rt_rw = payload
+            .rt_rw
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
         let house_note = payload
             .house_note
             .as_deref()
             .map(str::trim)
             .filter(|n| !n.is_empty());
+        let status = payload.status.trim();
 
         if full_name.is_empty() || house_no.is_empty() {
             return Redirect::to(&format!("/anggota/{}", id)).into_response();
@@ -629,7 +970,7 @@ impl MemberController {
             Err(_) => return Redirect::to(&format!("/anggota/{}", id)).into_response(),
         };
 
-        // Cari atau buat household
+        // Cari atau buat/update household
         let household_id: Uuid = match sqlx::query_scalar::<_, Uuid>(
             "SELECT id FROM households WHERE org_id = $1 AND house_no = $2",
         )
@@ -638,15 +979,41 @@ impl MemberController {
         .fetch_optional(&mut *tx)
         .await
         {
-            Ok(Some(hid)) => hid,
+            Ok(Some(hid)) => {
+                let _ = sqlx::query(
+                    r#"
+                    UPDATE households 
+                    SET family_card_no = COALESCE($1, family_card_no),
+                        ownership_status = COALESCE($2, ownership_status),
+                        rt_rw = COALESCE($3, rt_rw),
+                        note = COALESCE($4, note)
+                    WHERE id = $5 AND org_id = $6;
+                    "#,
+                )
+                .bind(family_card_no)
+                .bind(ownership_status)
+                .bind(rt_rw)
+                .bind(house_note)
+                .bind(hid)
+                .bind(org_id)
+                .execute(&mut *tx)
+                .await;
+                hid
+            }
             _ => {
                 let new_hid = Uuid::new_v4();
                 let _ = sqlx::query(
-                    "INSERT INTO households (id, org_id, house_no, note) VALUES ($1, $2, $3, $4)",
+                    r#"
+                    INSERT INTO households (id, org_id, house_no, family_card_no, ownership_status, rt_rw, note)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7);
+                    "#,
                 )
                 .bind(new_hid)
                 .bind(org_id)
                 .bind(house_no)
+                .bind(family_card_no)
+                .bind(ownership_status)
+                .bind(rt_rw)
                 .bind(house_note)
                 .execute(&mut *tx)
                 .await;
@@ -654,17 +1021,31 @@ impl MemberController {
             }
         };
 
-        // Update member
+        // Update member lengkap
         let update_res = sqlx::query(
             r#"
             UPDATE members 
-            SET household_id = $1, full_name = $2, phone = $3, status = $4, joined_on = $5
-            WHERE id = $6 AND org_id = $7;
+            SET household_id = $1, full_name = $2, nik = $3, gender = $4, phone = $5,
+                birth_place = $6, birth_date = $7, religion = $8, occupation = $9,
+                family_role = $10, is_head_of_family = $11, is_fee_payer = $12,
+                emergency_phone = $13, notes = $14, status = $15, joined_on = $16
+            WHERE id = $17 AND org_id = $18;
             "#,
         )
         .bind(household_id)
         .bind(full_name)
+        .bind(nik)
+        .bind(gender)
         .bind(phone)
+        .bind(birth_place)
+        .bind(birth_date)
+        .bind(religion)
+        .bind(occupation)
+        .bind(family_role)
+        .bind(is_head_of_family)
+        .bind(is_fee_payer)
+        .bind(emergency_phone)
+        .bind(notes)
         .bind(status)
         .bind(joined_on)
         .bind(id)

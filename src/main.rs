@@ -16,6 +16,9 @@ async fn main() {
         .with_web(routes::web::router())
         .with_api(routes::api::router());
 
+    // 2b. Ensure database schema expansion (atribut kependudukan lengkap)
+    app::services::ensure_schema_expanded().await;
+
     println!("⚡ Welcome to Lumina Framework");
     println!("🚀 Server running at http://127.0.0.1:8000");
     println!("📖 API Endpoints ready at http://127.0.0.1:8000/api");

@@ -2,6 +2,25 @@
 
 Semua perubahan pada proyek dicatat secara singkat di sini sesuai aturan `AGENTS.md`.
 
+## [2026-11-14] - Peningkatan Formulir Pendaftaran Warga Profesional & Lengkap (Biodata Kependudukan RT/RW)
+
+### Ditambahkan & Ditingkatkan
+- **Perluasan Skema Basis Data Kependudukan (`members` & `households`)**:
+  - Berkas migrasi [database/migrations/0003_expand_member_details.sql](file:///d:/PROJECT%20LUMINA/app_paguyuban/database/migrations/0003_expand_member_details.sql) dan modul startup idempoten [src/app/services/db_patch.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/src/app/services/db_patch.rs).
+  - Penambahan atribut kependudukan pada tabel `members`: `nik` (16 digit), `gender` (Laki-laki/Perempuan), `birth_place` & `birth_date`, `religion`, `occupation`, `family_role` (Kepala Keluarga, Istri, Anak, dll), `is_head_of_family`, `is_fee_payer` (penanggung jawab iuran rumah), `emergency_phone`, dan `notes`.
+  - Penambahan atribut hunian pada tabel `households`: `family_card_no` (Nomor KK), `ownership_status` (Milik Sendiri, Kontrak/Sewa, Menumpang, dll), dan `rt_rw`.
+- **Desain Formulir Warga Profesional & Lengkap (`members/form.blade.rs`)**:
+  - Dibuat ulang di [resources/views/members/form.blade.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/resources/views/members/form.blade.rs) dengan layout 3 kartu terstruktur:
+    1. **🪪 Bagian 1: Identitas Pribadi Warga**: Nama lengkap + gelar, NIK KTP dengan info proteksi privasi, pilihan jenis kelamin, tempat & tanggal lahir, agama, profesi/pekerjaan, nomor WhatsApp untuk e-invoice, dan nomor kontak darurat.
+    2. **🏠 Bagian 2: Data Rumah & Kartu Keluarga (KK)**: Nomor rumah/blok (dengan autocomplete datalist), Nomor KK (16 digit), peran dalam keluarga, status kepemilikan rumah, RT/RW lingkungan, dan catatan ciri fisik rumah.
+    3. **⚙️ Bagian 3: Keanggotaan & Administrasi Iuran**: Status keaktifan warga (Aktif, Menunggu Verifikasi, Nonaktif), tanggal mulai tinggal/bergabung, checkbox interaktif penanggung jawab iuran rumah, dan catatan khusus internal pengurus.
+  - Action footer bar yang elegan dengan ringkasan status keamanan data (RLS & Audit Logs) serta tombol *"Daftarkan Warga Baru"* / *"Perbarui Data Warga"*.
+- **Pembaruan Pengontrol & Validasi (`MemberController`)**:
+  - Memperbarui `CreateMemberForm`, `show_create`, `create`, `show_edit`, dan `update` di [src/app/controllers/member_controller.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/src/app/controllers/member_controller.rs) untuk menangani seluruh field kependudukan baru secara terpadu.
+- **Pengujian & Verifikasi**:
+  - Unit test [tests/f1_3_members_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/f1_3_members_test.rs) dan [tests/dashboard_health_test.rs](file:///d:/PROJECT%20LUMINA/app_paguyuban/tests/dashboard_health_test.rs) lolos 100%.
+  - `cargo clippy --offline -j 1` lolos bersih tanpa kesalahan logika.
+
 ## [2026-11-13] - Perbaikan Bocoran Sintaks `@else` pada Tampilan Kas & Parser Direktif Blade
 
 ### Diperbaiki & Ditingkatkan

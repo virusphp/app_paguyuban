@@ -1,0 +1,36 @@
+pub async fn ensure_schema_expanded() {
+    let db_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+        "postgres://postgres:postgres@127.0.0.1:54322/db_paguyuban".to_string()
+    });
+
+    let pool = match sqlx::PgPool::connect(&db_url).await {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("⚠️ [DB-Patch] Skip ensuring schema: {}", e);
+            return;
+        }
+    };
+
+    let statements = [
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS nik VARCHAR(20);",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS gender VARCHAR(20);",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS birth_place VARCHAR(100);",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS birth_date DATE;",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS religion VARCHAR(50);",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS occupation VARCHAR(100);",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS family_role VARCHAR(50) DEFAULT 'Kepala Keluarga';",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS is_head_of_family BOOLEAN DEFAULT FALSE;",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS is_fee_payer BOOLEAN DEFAULT TRUE;",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS emergency_phone VARCHAR(32);",
+        "ALTER TABLE members ADD COLUMN IF NOT EXISTS notes TEXT;",
+        "ALTER TABLE households ADD COLUMN IF NOT EXISTS ownership_status VARCHAR(50) DEFAULT 'Milik Sendiri';",
+        "ALTER TABLE households ADD COLUMN IF NOT EXISTS family_card_no VARCHAR(30);",
+        "ALTER TABLE households ADD COLUMN IF NOT EXISTS rt_rw VARCHAR(50);",
+    ];
+
+    for stmt in statements {
+        if let Err(e) = sqlx::query(stmt).execute(&pool).await {
+            eprintln!("⚠️ [DB-Patch] Error executing '{}': {}", stmt, e);
+        }
+    }
+}

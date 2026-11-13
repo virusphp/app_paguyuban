@@ -62,6 +62,42 @@ fn test_render_member_views_native_blade() {
     ctx_form.insert("today_date", "2026-10-24");
     ctx_form.insert("error", "");
 
+    #[derive(serde::Serialize, Default)]
+    struct DummyMemberForm {
+        id: String,
+        full_name: String,
+        nik: String,
+        gender: String,
+        phone: String,
+        birth_place: String,
+        birth_date: String,
+        religion: String,
+        occupation: String,
+        family_role: String,
+        is_head_of_family: bool,
+        is_fee_payer: bool,
+        emergency_phone: String,
+        notes: String,
+        house_no: String,
+        family_card_no: String,
+        ownership_status: String,
+        rt_rw: String,
+        house_note: String,
+        status: String,
+        joined_on: String,
+    }
+    ctx_form.insert(
+        "member",
+        DummyMemberForm {
+            status: "aktif".to_string(),
+            gender: "Laki-laki".to_string(),
+            family_role: "Kepala Keluarga".to_string(),
+            ownership_status: "Milik Sendiri".to_string(),
+            is_fee_payer: true,
+            ..Default::default()
+        },
+    );
+
     #[derive(serde::Serialize)]
     struct DummyHouse {
         house_no: String,
